@@ -185,6 +185,24 @@ a.btn.ghost{color:var(--gold)}
 .dctl{display:flex;justify-content:center;gap:12px}
 .btn:disabled{opacity:.35;box-shadow:none}
 .pol .ph img{cursor:zoom-in}
+/* custom heart cursor (mouse only) */
+html.hc *{cursor:none!important}
+.cur{position:fixed;left:0;top:0;z-index:100;pointer-events:none;opacity:0;transition:opacity .3s;--hf:#ff8fb8}
+.cur.on{opacity:1}
+.cur.dn{--hf:#e0172f}
+.cur .a,.cur .h{position:absolute;left:0;top:0;will-change:transform}
+.cur .ai{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:1.5px solid rgba(255,143,184,.7);background:radial-gradient(circle,rgba(255,77,106,.16),transparent 70%);transition:transform .4s cubic-bezier(.3,1.5,.5,1),border-color .25s,background .25s}
+.cur.hv .ai{transform:scale(1.7);background:radial-gradient(circle,rgba(255,77,106,.3),rgba(255,77,106,.05) 70%);border-color:rgba(255,215,160,.9)}
+.cur.dn .ai{transform:scale(.7);border-color:rgba(224,23,47,.95)}
+.cur .hb{position:absolute;left:0;top:0;animation:beat 1.7s ease-in-out infinite}
+.cur svg{position:absolute;width:30px;height:30px;left:-15px;top:-26px;overflow:visible;fill:var(--hf);stroke:#fff;stroke-width:1.2;stroke-linejoin:round;transform-origin:50% 87%;filter:drop-shadow(0 0 7px rgba(255,77,106,.8));transition:fill .18s,transform .35s cubic-bezier(.3,1.7,.5,1)}
+.cur.hv svg{transform:scale(1.25)}
+.cur.dn svg{transform:scale(.78)}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.13)}28%{transform:scale(1)}42%{transform:scale(1.08)}}
+.tr{position:fixed;z-index:99;pointer-events:none;font-size:11px;line-height:1;margin:-6px 0 0 -4px;color:var(--c);text-shadow:0 0 8px var(--c);animation:tr .95s ease-out forwards}
+@keyframes tr{from{opacity:.95;transform:translate(0,0) scale(1)}to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3) rotate(var(--r))}}
+.rip.g{border:0;box-shadow:none;background:radial-gradient(circle,rgba(255,77,106,.5),transparent 66%);animation-name:rg}
+@keyframes rg{0%{transform:scale(1);opacity:0}15%{opacity:.8}100%{transform:scale(12);opacity:0}}
 /* heart cursor: pink at rest, red while pressed */
 html{--pink:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z' fill='%23ff8fb8' stroke='white' stroke-width='1.2'/%3E%3C/svg%3E") 16 28,auto;
 --red:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z' fill='%23e0172f' stroke='white' stroke-width='1.2'/%3E%3C/svg%3E") 16 28,auto;--cur:var(--pink)}
@@ -328,9 +346,37 @@ mb.onclick=function(e){e.stopPropagation();if(au.paused){want=true;play();}else{
 document.addEventListener("pointerdown",play);
 document.addEventListener("visibilitychange",function(){if(!AUDIO)return;if(document.hidden){au.pause();}else if(want){play();}});
 
+/* custom heart cursor: smooth follow, aura, heartbeat, sparkle trail */
+(function(){
+  if(!matchMedia("(hover:hover) and (pointer:fine)").matches)return;
+  document.documentElement.classList.add("hc");
+  var c=document.createElement("div");c.className="cur";
+  c.innerHTML='<div class="a"><div class="ai"></div></div><div class="h"><div class="hb"><svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg></div></div>';
+  document.body.appendChild(c);
+  var A=c.querySelector(".a"),H=c.querySelector(".h"),x=-99,y=-99,ax=x,ay=y,px=x,vx=0,rot=0,acc=0,cols=["#ff8fb8","#ff4d6a","#f4c15d","#ffd9df"],sy=["♥","♥","✦"];
+  function loop(){ax+=(x-ax)*(RM?1:.17);ay+=(y-ay)*(RM?1:.17);vx+=((x-px)-vx)*.2;px=x;
+    rot+=(Math.max(-16,Math.min(16,vx*1.1))-rot)*.2;
+    A.style.transform="translate3d("+ax+"px,"+ay+"px,0)";H.style.transform="translate3d("+x+"px,"+y+"px,0) rotate("+(RM?0:rot)+"deg)";
+    requestAnimationFrame(loop);}
+  loop();
+  function trail(){var t=document.createElement("span"),col=cols[Math.random()*cols.length|0];t.className="tr";t.textContent=sy[Math.random()*sy.length|0];
+    t.style.left=x+"px";t.style.top=y+"px";t.style.fontSize=(8+Math.random()*7)+"px";t.style.setProperty("--c",col);
+    t.style.setProperty("--dx",(Math.random()*36-18)+"px");t.style.setProperty("--dy",(-22-Math.random()*30)+"px");t.style.setProperty("--r",(Math.random()*120-60)+"deg");
+    document.body.appendChild(t);t.addEventListener("animationend",function(){t.remove()});}
+  document.addEventListener("pointermove",function(e){
+    if(e.pointerType!=="mouse"){c.classList.remove("on");return;}
+    var dx=e.clientX-x,dy=e.clientY-y;if(x<0){ax=e.clientX;ay=e.clientY;px=e.clientX;}
+    x=e.clientX;y=e.clientY;c.classList.add("on");
+    c.classList.toggle("hv",!!(e.target.closest&&e.target.closest("button,a,input,.rc,.ph img,.eb,.tk,.x")));
+    if(!RM){acc+=Math.sqrt(dx*dx+dy*dy);if(acc>30){acc=0;trail();}}});
+  document.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse")c.classList.add("dn");else c.classList.remove("on");});
+  ["pointerup","pointercancel"].forEach(function(t){document.addEventListener(t,function(){c.classList.remove("dn")})});
+  document.addEventListener("mouseout",function(e){if(!e.relatedTarget)c.classList.remove("on")});
+})();
+
 /* heart cursor press + ripple wave */
 document.addEventListener("pointerdown",function(e){document.documentElement.classList.add("down");
-  for(var i=0;i<3;i++){var r=document.createElement("span");r.className="rip";r.style.left=e.clientX+"px";r.style.top=e.clientY+"px";r.style.animationDelay=i*.14+"s";document.body.appendChild(r);setTimeout(function(q){q.remove()},1600,r);}});
+  for(var i=0;i<4;i++){var r=document.createElement("span");r.className=i===3?"rip g":"rip";r.style.left=e.clientX+"px";r.style.top=e.clientY+"px";r.style.animationDelay=(i===3?0:i*.14)+"s";document.body.appendChild(r);setTimeout(function(q){q.remove()},1600,r);}});
 ["pointerup","pointercancel"].forEach(function(t){document.addEventListener(t,function(){document.documentElement.classList.remove("down")})});
 
 /* ambient background */
